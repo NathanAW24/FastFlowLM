@@ -1,0 +1,32 @@
+---
+title: Gemma 3 Benchmark Results
+parent: Benchmarks
+nav_order: 3
+---
+
+## ⚡ Performance and Efficiency Benchmarks
+
+This section reports the performance and power usage of Gemma 3 on NPU (FastFlowLM, or FLM).
+
+> **Note:** 
+- Results are based on FastFlowLM v0.9.8. 
+- Test system spec: AMD Ryzen™ AI 7 350 (Krakan Point) with 32 GB DRAM. 
+- Newer versions may deliver improved performance. 
+
+---
+
+### 🚀 Decoding Speed (TPS, or Tokens per Second, @ different sequence lengths)
+
+| **Model**        | **Hardware**       | **1k** | **2k** | **4k** | **8k** | **16k** | **32k** |**64k** | **128k** |
+|------------------|--------------------|--------:|--------:|--------:|--------:|---------:|---------:|---------:|---------:|
+| **Gemma 3 1B**  | NPU (FLM)    | 34.2|	33.7|	32.6|	31.4|	28.3|	24.1|	OOC|	OOC|
+| **Gemma 3 4B**  | NPU (FLM)    | 14.4|	14.4|	14.1|	13.7|	13.0|	11.9| 10.8|	9.2|
+
+---
+
+### 🚀 Prefill Speed (TTFT, or Time to First Token in **Seconds**, @ different sequence lengths)
+
+| **Model**        | **Hardware**       | **1k** | **2k** | **4k** | **8k** | **16k** | **32k** |
+|------------------|--------------------|--------:|--------:|--------:|--------:|---------:|---------:|
+| **Gemma 3 1B**   | NPU (FLM)    | 1.02|	1.64|	2.70|	4.90|	9.74|	21.03|
+| **Gemma 3 4B**   | NPU (FLM)    | 1.98|	3.27|	5.82|	11.06|	22.91|	50.87|
