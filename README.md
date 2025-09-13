@@ -8,10 +8,10 @@
   <img src="https://img.shields.io/badge/NPU-Optimized-red" />
 </p>
 
-# ⚡ FastFlowLM (FLM) — Unlock Ryzen™ AI NPUs
+## ⚡ FastFlowLM (FLM) — Unlock Ryzen™ AI NPUs
 
 Run large language models — now with **Vision support** — on AMD Ryzen™ AI NPUs in minutes.  
-**No GPU required. 10× more power-efficient. Context lengths up to 256k tokens.**
+**No GPU required. Faster and over 10× more power-efficient. Context lengths up to 256k tokens.**
 
 ✨ *From Idle Silicon to Instant Power — FastFlowLM Makes Ryzen™ AI Shine.*
 
