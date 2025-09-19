@@ -1,5 +1,5 @@
 ---
-title: Open WebUI + FastFlowLM
+title: Open WebUI + FLM
 nav_order: 2
 parent: Local Server (Server Mode)
 ---

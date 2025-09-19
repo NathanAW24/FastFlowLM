@@ -1,6 +1,6 @@
 ---
-title: Microsfot AI Toolkit + FastFlowLM
-nav_order: 3
+title: Microsfot AI Toolkit + FLM
+nav_order: 4
 parent: Local Server (Server Mode)
 ---
 

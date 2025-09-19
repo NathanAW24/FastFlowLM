@@ -1,6 +1,6 @@
 ---
 title: Build RAG with LangChain
-nav_order: 4
+nav_order: 5
 parent: Local Server (Server Mode)
 ---
 
