@@ -273,7 +273,7 @@ With your **API Key** and **Search Engine ID** from Step 1, follow these steps:
 
 ### 💬 Step 4: Start Using Web Search
 
-1. Start a new chat and select your preferred model (e.g., qwen3-tk:4b).
+1. Start a new chat and select your preferred model (e.g., qwen3-it:4b).
 > ⚠️ **Note:** not all models handle web search well.
 2. Under the chat input box, Click `integrations`, and toggle **Web Search** to activate it .
 - 🔄 You’ll need to activate this **every time you start a new chat**. 
