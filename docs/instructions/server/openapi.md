@@ -325,8 +325,9 @@ response = client.chat.completions.create(
             "role": "user",
             "content": [
                 {"type": "text", "text": "Describe the images. Which one you like better and why?"},
-                {"type": "image_url", "image_url": {"url": image_0}},
-                {"type": "image_url", "image_url": {"url": image_1}},
+                
+                {"type": "image_url", "image_url": {"url": f"data:image/jpg;base64,{image_0}"}}, # standard OpenAI-compatible API
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_1}"}}, 
             ],
         }
     ],
