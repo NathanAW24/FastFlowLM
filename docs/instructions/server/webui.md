@@ -295,6 +295,8 @@ RAG combines two steps:
 
 In this example, the knowledge base is the **Open WebUI documentation**. With FastFlowLM running on the **NPU**, you get fast, efficient, and secure responses — all without sending your data to the cloud.  
 
+[🎬 Watch the Teaser Video](https://youtu.be/GAzPj6QbfKk?si=5FDkpjlVDI64oIol)
+
 ### 📝 Step 1: Download the Documentation
 
 1. Download the latest `Open WebUI` **[documentation](https://github.com/open-webui/docs/archive/refs/heads/main.zip)**.

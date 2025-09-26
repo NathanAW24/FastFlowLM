@@ -34,3 +34,12 @@ This section reports the performance on NPU with FastFlowLM (FLM).
 |------------------|--------------------|--------:|--------:|--------:|--------:|---------:|---------:|---------|
 | **Gemma 3 1B**   | NPU (FLM)    | 1.02|	1.64|	2.70|	4.90|	9.74|	21.03|**Gemma 3 1B**  |
 | **Gemma 3 4B**   | NPU (FLM)    | 1.98|	3.27|	5.82|	11.06|	22.91|	50.87|**Gemma 3 4B**  |
+
+
+### 🚀 Prefill TTFT with image
+
+| **Model**        | **Hardware**       | **Image** |
+|------------------|--------------------|--------:|
+| **Gemma 3 4B**   | NPU (FLM)    | 4.3|
+
+> This test uses a short prompt: “Describe this image.”

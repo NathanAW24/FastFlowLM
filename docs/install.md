@@ -32,6 +32,14 @@ You must have AMD NPU driver **version 32.0.203.258 or later** installed for Fas
 A packaged FLM Windows installer is available here:  
 [**flm-setup.exe**](https://github.com/FastFlowLM/FastFlowLM/releases/latest/download/flm-setup.exe)
 
+> To install silently, open PowerShell, navigate (`cd`) to the download folder, and run:
+
+```powershell
+.\flm-setup.exe /Silent
+# or
+.\flm-setup.exe /VERYSilent
+```
+
 If you see **"Windows protected your PC"**, click **More info**, then select **Run anyway**.
 
 📺 [**Watch the quick start video**](https://www.youtube.com/watch?v=mYOfDNkyBII)
