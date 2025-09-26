@@ -29,8 +29,28 @@ To change it at launch, in PowerShell, run:
 flm serve llama3.2:1b --ctx-len 8192
 ```
 
-> Internally, FLM enforces a minimum context length of 512. If you specify a smaller value, it will automatically be adjusted up to 512.  
+> - Internally, FLM enforces a minimum context length of 512. If you specify a smaller value, it will automatically be adjusted up to 512.  
 > - If you enter a context length that is not a power of 2, FLM automatically rounds it up to the nearest power of 2. For example: input `8000` → adjusted to `8192`.  
+
+## Show Server Port 
+
+Show current FLM port (default) in PowerShell:  
+  
+  ```powershell
+  flm port
+  ```
+
+## Set Server Port at Launch
+
+Set a custom port at launch:
+
+  ```powershell
+  flm serve llama3.2:1b --port 8000
+  flm serve llama3.2:1b -p 8000
+  ```
+
+> ⚠️ `--port` (`-p`) only affects the **current run**; it won’t change the default port.
+
 
 ## Set Request Queue in Server Mode
 
