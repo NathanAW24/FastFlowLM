@@ -28,7 +28,7 @@ flm run gemma3:4b --asr 1
 Then, type (replace `filename.mp3` with your audio file path):
 
 ```powershell
-/input "path/to/audio_sample.mp3" summarize it
+/input "path\to\audio_sample.mp3" summarize it
 ```
 
 ### Server Mode 
