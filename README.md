@@ -99,7 +99,8 @@ No model rewrites, no tuning — it just works.
 ## 📄 License
 
 - All orchestration code and CLI tools are open-source under the [MIT License](./LICENSE_RUNTIME.txt).  
-- NPU-accelerated kernels are **proprietary binaries**: free for **commercial use unless your company’s annual revenue exceeds USD 10 million**. Above that threshold, a commercial license is required. See [LICENSE_BINARY.txt](./LICENSE_BINARY.txt) and [TERMS.md](./TERMS.md) for details.  
+- NPU-accelerated kernels are **proprietary binaries**, free for **commercial use up to USD 10 million in annual company revenue**.
+- Companies exceeding this threshold (**USD 10 million**) must obtain a commercial license. See [LICENSE_BINARY.txt](./LICENSE_BINARY.txt) and [TERMS.md](./TERMS.md) for full details.
 - **Free-tier users:** Please acknowledge FastFlowLM in your README/project page (or product) as follows:
   ```
   Powered by [FastFlowLM](https://github.com/FastFlowLM/FastFlowLM)
