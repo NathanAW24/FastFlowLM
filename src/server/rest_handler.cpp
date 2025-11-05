@@ -346,7 +346,7 @@ void RestHandler::handle_chat(const json& request,
         auto_chat_engine->configure_parameter("enable_think", enable_thinking);
         auto_chat_engine->configure_parameter("reasoning_effort", reasoning_effort);
 
-        messages = normalize_messages(messages);
+        // messages = normalize_messages(messages);
         
         chat_meta_info_t meta_info;
         lm_uniform_input_t uniformed_input;

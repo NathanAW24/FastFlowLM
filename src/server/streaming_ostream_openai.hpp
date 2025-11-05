@@ -457,7 +457,9 @@ private:
             {"choices", json::array({
                 {
                     {"index", 0},
-                    {"delta", {}},
+                    {"delta", {
+                    {"content", nullptr}
+                }},
                     //{"logprobs", nullptr},
                     {"finish_reason", stop_reason_to_string(meta_info.stop_reason)}
                 }
