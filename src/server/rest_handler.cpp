@@ -4,7 +4,7 @@
  * \brief RestHandler class and related declarations
  * \author FastFlowLM Team
  * \date 2025-08-05
- * \version 0.9.16
+ * \version 0.9.17
  */
 #include "rest_handler.hpp"
 #include "wstream_buf.hpp"
