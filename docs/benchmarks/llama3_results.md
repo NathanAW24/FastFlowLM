@@ -9,7 +9,7 @@ nav_order: 1
 This section reports the performance of LLaMA 3.x on NPU with FastFlowLM (FLM).
 
 > **Note:** 
-- Results are based on FastFlowLM v0.9.19.  
+- Results are based on FastFlowLM v0.9.21.  
 - Under FLM's default NPU power mode (Performance)   
 - Test system spec: AMD Ryzen™ AI 7 350 (Krakan Point) with 32 GB DRAM.   
 - Newer versions may deliver improved performance.   
@@ -20,9 +20,9 @@ This section reports the performance of LLaMA 3.x on NPU with FastFlowLM (FLM).
 
 | **Model**        | **Hardware** | **1k** | **2k** | **4k** | **8k** | **16k** | **32k** | **64k** | **128k** | **Model**        |
 |------------------|--------------|-------:|-------:|-------:|-------:|--------:|--------:|--------:|---------:|------------------|
-| **LLaMA 3.2 1B** | NPU (FLM)    |43.9	   | 42.2   |	40.0 |	34.5  |	27.8    |	20.0  |	12.8    |	9.8    | **LLaMA 3.2 1B** |
-| **LLaMA 3.2 3B** | NPU (FLM)    | 19.8   | 18.8   |	17.4 |	14.8  |	11.8    |	8.3   |	6.3     | OOM      | **LLaMA 3.2 3B** |
-| **LLaMA 3.1 8B** | NPU (FLM)    | 9.4    |	9.2 |	8.7  |	8.0   |	6.9     |	5.3   | OOM     | OOM      | **LLaMA 3.1 8B** |
+| **LLaMA 3.2 1B** | NPU (FLM)    |62.7	| 58.8	| 52.7	| 44.8	| 33.7	| 23.6	| 14.6	  | 10.6    | **LLaMA 3.2 1B** |
+| **LLaMA 3.2 3B** | NPU (FLM)    | 26.2 | 24.6	| 22.1	| 18.3	| 13.7	| 9.1	| 6.8     | OOM      | **LLaMA 3.2 3B** |
+| **LLaMA 3.1 8B** | NPU (FLM)    | 12.7 | 12.4	| 11.6	| 10.4	| 8.6	| 6.3   | OOM     | OOM      | **LLaMA 3.1 8B** |
 
 <!-- | **Model**        | **Hardware** | **1k** | **2k** | **4k** | **8k** | **16k** | **32k** | **64k** | **128k** | **Hardware** | **Model**        |
 |------------------|--------------|-------:|-------:|-------:|-------:|--------:|--------:|--------:|---------:|--------------|------------------|
