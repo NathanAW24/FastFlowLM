@@ -178,6 +178,18 @@ Set a custom port at launch:
 
 ---
 
+### 🖥️ Set Host at Launch
+
+Specify a custom host address when starting the server:
+
+  ```powershell
+  flm serve llama3.2:1b --host 127.0.0.1
+  ```
+
+> ⚠️ `--host` only affects the **current run**; it won’t change the default port (deault port is `127.0.0.1`).
+
+---
+
 ### 🌐 Cross-Origin Resource Sharing (CORS)
 
 CORS lets browser apps hosted on a different origin call your FLM server safely.
