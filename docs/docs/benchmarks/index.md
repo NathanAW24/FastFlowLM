@@ -13,6 +13,6 @@ Browse detailed NPU benchmark results for each major model family supported by F
 - [Qwen 3](qwen3_results/)
 - [Gemma 3](gemma3_results/)
 - [gpt-oss](gpt-oss_results/)
-- [LiquidAI/LFM2-1.2B](lfm2:1.2b_results/)
+- [LiquidAI/LFM2](lfm2_results/)
 
 Each page includes decoding and prefill speed metrics (tokens per second) and notes about the test setup and hardware. 
