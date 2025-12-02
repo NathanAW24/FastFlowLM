@@ -125,5 +125,5 @@ docs_nav:
       - label: GPT-OSS
         url: "/docs/benchmarks/gpt-oss_results/"
       - label: LFM2 1.2B
-        url: "/docs/benchmarks/lfm2:1.2b_results/"
+        url: "/docs/benchmarks/lfm2_results/"
 
