@@ -25,7 +25,7 @@ sections:
       - label: "Context"
         value: "Up to 256k tokens"
       - label: "Supported chips"
-        value: "Ryzen™ AI (Strix, Halo, Kraken)"
+        value: "Ryzen™ AI (Strix, Strix Halo, Kraken)"
     right:
       carousel:
         slides:
@@ -36,7 +36,7 @@ sections:
               title: "Ryzen™ AI"
               subtitle: "FastFlowLM Runtime"
               metrics:
-                - "10× power efficiency"
+                - "Over 10× power efficiency"
                 - "256k ctx"
                 - "Vision · Audio · Text"
           - title: "Ollama‑Style Developer Flow"
@@ -53,14 +53,14 @@ sections:
             visual:
               type: "metrics"
               metrics:
-                - value: "10×"
+                - value: "Over 10×"
                   label: "Power Efficiency"
                 - value: "256k"
                   label: "Context Tokens"
                 - value: "~16MB"
                   label: "Runtime Size"
           - title: "Multi‑Modal AI Support"
-            description: "Run language models, vision models, audio processing, embeddings, and Mixture‑of‑Experts architectures."
+            description: "Run language models, vision models, audio processing, embeddings, and support Mixture‑of‑Experts (MoE) architectures."
             visual:
               type: "pills"
               pills:
@@ -68,7 +68,7 @@ sections:
                 - "VLMs"
                 - "Audio"
                 - "Embeddings"
-                - "MoE"
+                - "MoE Support"
 
   - type: media
     variant: alt
@@ -97,13 +97,13 @@ sections:
 
   - type: media
     variant: alt
-    kicker: "Llama 3.2 on WebUI"
+    kicker: "Llama 3.2 on NPU"
     title: "Interact with Llama 3.2-3B through the FastFlowLM WebUI"
     media:
       src: "/assets/llama-demo.gif"
       alt: "Llama 3.2 chat demo running in the FastFlowLM WebUI"
       href: "https://youtu.be/mPrr9FLd8ps?si=vsyHkmtrBjP4s-dq"
-      kicker: "Llama 3.2 on WebUI"
+      kicker: "Llama 3.2 on NPU"
       body: |
         Runs Meta Llama 3.2-3B at 28 TPS with over 10× GPU efficiency — the fastest on any NPU.
 
@@ -113,15 +113,15 @@ sections:
       kicker: "Install"
       title: "From download to first token in under a minute"
       body: |
-        FastFlowLM ships as a 16 MB runtime with an Ollama-compatible CLI.
-        No CUDA, no drivers, no guesswork—just run the installer, pull a model, and start chatting.
+        FastFlowLM ships as a 16 MB runtime with an Ollama-style CLI and a server compatible with the OpenAI API.
+        No drivers, no guesswork—just run the installer, pull a model, and start chatting.
       items:
         - heading: "Zero-conf installer"
-          body: "Signed FastFlowLM installers cover every Ryzen™ AI laptop—just download and run."
+          body: "igned installers for every Ryzen™ AI 300 laptop — download, run, done."
         - heading: "Drop-in APIs"
-          body: "Compatible with Ollama, OpenAI, and Open WebUI endpoints for existing tooling."
+          body: "OpenAI-compatible APIs — plug in your existing tools instantly."
         - heading: "Secure by default"
-          body: "Local auth tokens, TLS, and offline mode keep your data on-device."
+          body: "On-device security: local tokens and full offline mode."
     right:
       kicker: "Quickstart"
       code_blocks:
@@ -131,32 +131,25 @@ sections:
               -OutFile flm-setup.exe
             Start-Process .\flm-setup.exe -Wait
             flm pull llama3.2:3b
-            flm run llama3.2:3b --ctx 256k
-        - title: "APIs"
-          content: |
-            POST /v1/chat/completions
-            Authorization: Bearer $FLM_TOKEN
-
-            curl -s localhost:11434/api/generate \
-              -d '{"model":"gemma3:4b","prompt":"hello"}'
-
+            flm run llama3.2:3b --ctx-len 131072
+            
   - type: cards
     id: models
     kicker: "Models"
-    title: "One CLI, every Ryzen-ready model"
+    title: "One runtime, every Ryzen-ready model"
     body: |
       Pull curated FastFlowLM recipes.
-      The runtime streams tokens via HTTP, WebSocket, or the Ollama-compatible API, so existing apps work without rewrites.
+      The runtime streams tokens via OpenAI-compatible API, so existing apps work without rewrites.
     cards:
       - label: "Flagship reasoning"
-        title: "Llama 3.2 · DeepSeek · Qwen 3"
-        body: "Optimized kernels for 70B down to 1B, with automatic quantization and smart context reuse."
+        title: "GPT-OSS · DeepSeek-R1 · Qwen3"
+        body: "Optimized kernels with smart context reuse."
       - label: "Vision & speech"
-        title: "Gemma 3 VLM · Whisper · Gemma Audio"
+        title: "Gemma3 · Qwen3-VL · Whisper"
         body: "VLM and audio pipelines run on the NPU, enabling private multimodal assistants."
-      - label: "Edge fine-tuning"
-        title: "FLM MoE + Embedding suites"
-        body: "Use built-in adapters, LoRA checkpoints, and embedding endpoints for retrieval workflows."
+      - label: "Local private edge database"
+        title: "Retrieval-Augmented Generation (RAG) · Embedding Model"
+        body: "Build and run a complete RAG workflow fully on the NPU, without relying on the CPU or GPU."
     ctas:
       - label: "Browse models"
         href: "/models/"

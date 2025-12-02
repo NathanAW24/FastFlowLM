@@ -20,7 +20,7 @@ has_children: true
 - [Gemma](gemma/)
 - [DeepSeek](deepseek/)
 - [gpt-oss](gpt-oss/)
-- [LiquidAI / LFM](lfm/)
+- [LiquidAI/LFM](lfm/)
 - [Whisper](whisper/)
 - [MedGemma](medgemma/)
 - [Embedding Gemma](embeddinggemma/)
