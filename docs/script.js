@@ -421,12 +421,53 @@
 
   // Docs-only enhancements: code copy buttons + heading anchor links
   if (docsContent) {
-    // Add copy buttons to code blocks
+    // Add copy buttons to code blocks (handles both Rouge-highlighted and plain code)
     const addCopyButtons = () => {
+      // Handle Rouge-highlighted code blocks (.highlight > pre > code)
+      const highlightBlocks = docsContent.querySelectorAll(".highlight");
+      highlightBlocks.forEach((highlightEl) => {
+        if (highlightEl.dataset.copyEnhanced === "true") return;
+        const codeEl = highlightEl.querySelector("code");
+        if (!codeEl) return;
+
+        highlightEl.dataset.copyEnhanced = "true";
+        const wrapper = document.createElement("div");
+        wrapper.className = "docs-code-block";
+
+        highlightEl.parentNode.insertBefore(wrapper, highlightEl);
+        wrapper.appendChild(highlightEl);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "docs-code-copy-btn";
+        button.setAttribute("aria-label", "Copy code to clipboard");
+        button.textContent = "Copy";
+
+        button.addEventListener("click", async () => {
+          const text = codeEl.innerText || codeEl.textContent || "";
+          try {
+            await navigator.clipboard.writeText(text);
+            button.classList.add("copied");
+            button.textContent = "Copied";
+            window.setTimeout(() => {
+              button.classList.remove("copied");
+              button.textContent = "Copy";
+            }, 1500);
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error("Failed to copy code", e);
+          }
+        });
+
+        wrapper.appendChild(button);
+      });
+
+      // Handle plain code blocks (pre > code) that aren't inside .highlight
       const codeBlocks = docsContent.querySelectorAll("pre > code");
       codeBlocks.forEach((codeEl) => {
         const pre = codeEl.parentElement;
-        if (!pre || pre.dataset.copyEnhanced === "true") return;
+        // Skip if already handled by Rouge or already enhanced
+        if (!pre || pre.closest(".highlight") || pre.dataset.copyEnhanced === "true") return;
 
         pre.dataset.copyEnhanced = "true";
         const wrapper = document.createElement("div");
