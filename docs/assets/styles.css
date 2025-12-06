@@ -1240,11 +1240,13 @@ body.nav-open .nav__mobile {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   max-width: 100%;
   box-sizing: border-box;
+  /* Clip horizontal overflow to prevent page scrolling, but allow table wrappers to scroll internally */
   overflow-x: hidden;
   /* Slightly smaller, denser typography than marketing pages */
   font-size: 0.95rem;
   line-height: 1.6;
 }
+
 
 .docs-content h1,
 .docs-content h2,
@@ -1495,16 +1497,76 @@ body.nav-open .nav__mobile {
   table-layout: auto;
 }
 
+/* Scrollable wrapper for tables on mobile */
+.docs-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 24px 0;
+  /* Ensure the wrapper itself can scroll */
+  max-width: 100%;
+  position: relative;
+  /* Extend to edges of content area for better scrolling, but stay within content bounds */
+  margin-left: calc(-1 * var(--space-lg));
+  margin-right: calc(-1 * var(--space-lg));
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
+  width: calc(100% + 2 * var(--space-lg));
+  max-width: calc(100% + 2 * var(--space-lg));
+  /* Ensure wrapper scrolls internally, not causing page scroll */
+  contain: layout;
+}
+
+.docs-table-wrapper table {
+  margin: 0;
+  /* Let table be as wide as it needs to be - don't constrain it */
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+.docs-table-wrapper th,
+.docs-table-wrapper td {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  text-overflow: ellipsis;
+  /* Prevent text from breaking vertically */
+  line-height: 1.4;
+}
+
+/* On larger screens, tables can be full width without scrolling */
+@media (min-width: 768px) {
+  .docs-table-wrapper {
+    overflow-x: visible;
+  }
+  
+  .docs-table-wrapper table {
+    width: 100%;
+    white-space: normal;
+  }
+  
+  .docs-table-wrapper th,
+  .docs-table-wrapper td {
+    white-space: normal;
+  }
+}
+
 .docs-content th,
 .docs-content td {
   border: 1px solid var(--border);
   padding: 12px;
   text-align: left;
+  color: var(--text);
+}
+
+/* Only break words in table cells if not in a scrollable wrapper */
+.docs-content table:not(.docs-table-wrapper table) th,
+.docs-content table:not(.docs-table-wrapper table) td {
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 0;
-  color: var(--text);
 }
 
 .docs-content blockquote {

@@ -488,8 +488,24 @@
       });
     };
 
+    // Wrap tables in scrollable containers for mobile
+    const wrapTables = () => {
+      const tables = docsContent.querySelectorAll("table");
+      tables.forEach((table) => {
+        // Skip if already wrapped
+        if (table.parentElement.classList.contains("docs-table-wrapper")) return;
+        
+        const wrapper = document.createElement("div");
+        wrapper.className = "docs-table-wrapper";
+        
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+    };
+
     addCopyButtons();
     addHeadingAnchors();
+    wrapTables();
   }
 })();
 
