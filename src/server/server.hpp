@@ -4,7 +4,7 @@
  * \brief WebServer class and related declarations
  * \author FastFlowLM Team
  * \date 2025-06-24
- *  \version 0.9.21
+ *  \version 0.9.24
  */
 #pragma once
 
@@ -75,7 +75,9 @@ struct CancellationToken {
     void cancel() {
         is_cancelled.store(true);
     }
-    
+    void reset() noexcept { 
+        is_cancelled.store(false, std::memory_order_relaxed); 
+    }
     bool cancelled() const {
         return is_cancelled.load();
     }
@@ -173,6 +175,9 @@ public:
     void write_streaming_response(const json& data, bool is_final);
     void close_connection();
     void write_response_from_callback();
+    void set_cancellation_token(std::shared_ptr<CancellationToken> token) {
+        cancellation_token_ = token;
+    }
 private:
     void read_request(bool cors);
     void handle_request(bool cors);
@@ -193,6 +198,7 @@ private:
     bool is_streaming_;
     ///@brief stream buffer
     std::shared_ptr<streaming_buf> stream_buf_;
+    std::shared_ptr<CancellationToken> cancellation_token_;
 };
 
 // Forward declarations

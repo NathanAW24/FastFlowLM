@@ -2,7 +2,7 @@
 /// \brief deepseek class
 /// \author FastFlowLM Team
 /// \date 2025-09-01
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the deepseek class
 
 
@@ -27,7 +27,7 @@ void Qwen3::load_model(std::string model_path, json model_info, int default_cont
     this->setup_tokenizer(model_path);
     this->sampler.reset();
 
-    this->enable_think = true;
+    this->enable_think = (model_info["size"] == 600000000)? false : true;
 
     sampler_config config;
     config.rep_penalty = 1.1;
@@ -75,14 +75,20 @@ bool Qwen3::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+
+    if (this->is_first_prompt == false) {
+        tokens.insert(tokens.begin(), 198);
+    }
+    this->is_first_prompt = false;
+
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
 
     return this->_shared_insert(meta_info, tokens);
 }
 
-std::string Qwen3::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
-    return this->_shared_generate(meta_info, length_limit, os);
+std::string Qwen3::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
+    return this->_shared_generate(meta_info, length_limit, os, cancellation_token);
 }
 
 std::string Qwen3::generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os) {
@@ -156,14 +162,18 @@ bool Qwen3_IT::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+    if (this->is_first_prompt == false) {
+        tokens.insert(tokens.begin(), 198);
+    }
+    this->is_first_prompt = false;
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
 
     return this->_shared_insert(meta_info, tokens);
 }
 
-std::string Qwen3_IT::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
-    return this->_shared_generate(meta_info, length_limit, os);
+std::string Qwen3_IT::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
+    return this->_shared_generate(meta_info, length_limit, os, cancellation_token);
 }
 
 std::string Qwen3_IT::generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os) {
@@ -238,16 +248,20 @@ bool Qwen3_TK::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+      if (this->is_first_prompt == false) {
+        tokens.insert(tokens.begin(), 198);
+    }
+    this->is_first_prompt = false;
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
 
     return this->_shared_insert(meta_info, tokens);
 }
 
-std::string Qwen3_TK::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
+std::string Qwen3_TK::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
     std::string result;
     os << "<think>\n\n";
-    result = this->_shared_generate(meta_info, length_limit, os);
+    result = this->_shared_generate(meta_info, length_limit, os, cancellation_token);
     result = "<think>\n\n" + result;
     return result;
 }
@@ -322,14 +336,18 @@ bool DeepSeek_r1_0528_8b::insert(chat_meta_info_t& meta_info, lm_uniform_input_t
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+    if (this->is_first_prompt == false) {
+        tokens.insert(tokens.begin(), 198);
+    }
+    this->is_first_prompt = false;
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
 
     return this->_shared_insert(meta_info, tokens);
 }
 
-std::string DeepSeek_r1_0528_8b::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
-    std::string result = this->_shared_generate(meta_info, length_limit, os);
+std::string DeepSeek_r1_0528_8b::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
+    std::string result = this->_shared_generate(meta_info, length_limit, os, cancellation_token);
     return result;
 }
 

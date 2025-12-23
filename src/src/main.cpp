@@ -2,7 +2,7 @@
 /// \brief Main entry point for the FLM application
 /// \author FastFlowLM Team
 /// \date 2025-08-05
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the main entry point
 #pragma once
 #include "runner.hpp"
@@ -330,7 +330,7 @@ int main(int argc, char* argv[]) {
                 std::cout << "Models:" << std::endl;
                 nlohmann::json models = supported_models.get_all_models();
                 for (const auto& model : models["models"]) {
-                    bool is_present = downloader.is_model_downloaded(model["name"].get<std::string>());
+                    bool is_present = downloader.is_model_downloaded(model["name"].get<std::string>(), quiet_list);
                     if ((list_filter == "installed") == is_present || list_filter == "all") {
                         std::cout << "  - " << model["name"].get<std::string>();
                         if (!quiet_list) {

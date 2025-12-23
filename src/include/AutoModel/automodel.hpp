@@ -2,7 +2,7 @@
 /// \brief automodel class
 /// \author FastFlowLM Team
 /// \date 2025-09-01
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a header file for the auto_model class
 #pragma once
 
@@ -34,12 +34,14 @@
 #include "minja/chat-template.hpp"
 #include <nlohmann/json.hpp>
 
-
+// Forward declaration
+struct CancellationToken;
 
 typedef enum {
     EOT_DETECTED,
     MAX_LENGTH_REACHED,
-    ERROR_DETECTED
+    ERROR_DETECTED,
+	CANCEL_DETECTED
 } stop_reason_t;
 
 inline std::string stop_reason_to_string(stop_reason_t reason){
@@ -48,6 +50,8 @@ inline std::string stop_reason_to_string(stop_reason_t reason){
             return "stop";
         case MAX_LENGTH_REACHED:
             return "length";
+		case CANCEL_DETECTED:
+			return "cancel";
         case ERROR_DETECTED:
             return "error";
         default:
@@ -115,6 +119,7 @@ protected:
 	xrt::device* npu_device_inst = nullptr;
 	std::unique_ptr<npu_xclbin_manager> npu = nullptr;
 	bool enable_preemption = false;
+	bool is_first_prompt; // for remove bos token in multi-round conversation
 
 	uint32_t MAX_L = 0;
 	int last_token = -1;
@@ -151,7 +156,7 @@ protected:
 	nlohmann::json _shared_setup_tokenizer(std::string model_path);
 
 	bool _shared_insert(chat_meta_info_t& meta_info, std::vector<int>& tokens, void* payload = nullptr);
-	std::string _shared_generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os);
+	std::string _shared_generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token = nullptr);
 
 public:
 	//************ Shared by all models *************/
@@ -262,7 +267,7 @@ public:
 	//************ Unique for each model *************/
 	
 	virtual void load_model(std::string model_path, json model_info, int default_context_length = -1, bool enable_preemption = false) {}
-	virtual std::string generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) = 0;
+	virtual std::string generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token = nullptr) = 0;
 
 	/// \brief Insert the tokens
 	/// \param tokens the tokens

@@ -4,7 +4,7 @@
  * \brief RestHandler class and related declarations
  * \author FastFlowLM Team
  * \date 2025-08-05
- *  \version 0.9.21
+ *  \version 0.9.24
  */
 #include "rest_handler.hpp"
 #include "wstream_buf.hpp"
@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <locale>
 #include <random>
+#include "server.hpp"
 
 ///@brief Normalize messages by merging consecutive user messages (like Ollama does)
 ///@param messages the original messages
@@ -138,6 +139,26 @@ static nlohmann::ordered_json normalize_template(nlohmann::ordered_json messages
 
     return template_message;
 }
+
+static uint64_t checksum(const void* p, size_t len, uint64_t sum = 0) {
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(p);
+    uint64_t _sum = sum;
+
+    const uint64_t* p64 = reinterpret_cast<const uint64_t*>(data);
+    size_t blocks = len / sizeof(uint64_t);
+    for (size_t i = 0; i < blocks; ++i) {
+        _sum += p64[i];
+    }
+
+    const uint8_t* p8 = data + blocks * sizeof(uint64_t);
+    size_t remain = len % sizeof(uint64_t);
+    for (size_t i = 0; i < remain; ++i) {
+        _sum += p8[i];
+    }
+
+    return _sum;
+}
+
 
 ///@brief RestHandler constructor
 ///@param models the model list
@@ -679,7 +700,7 @@ void RestHandler::handle_openai_chat_completion(const json& request,
                                                std::shared_ptr<CancellationToken> cancellation_token) {
     try {
         // Extract OpenAI-style parameters
-        nlohmann::ordered_json messages = request["messages"];
+        nlohmann::ordered_json current_messages = request["messages"];
         std::string model = request.value("model", current_model_tag);
         std::string reasoning_effort = request.value("reasoning_effort", "medium");
         bool stream = request.value("stream", false);
@@ -691,9 +712,49 @@ void RestHandler::handle_openai_chat_completion(const json& request,
         ensure_model_loaded(model);
         auto load_end_time = time_utils::now();
 
-        messages = normalize_messages(messages);
-        messages = normalize_template(messages);
+        current_messages = normalize_messages(current_messages);
+        current_messages = normalize_template(current_messages);
         
+        static uint64_t sum_old = 0;
+        static std::string current_model=model;
+        uint64_t sum_new1 = 0;
+        uint64_t sum_new2 = 0;
+        nlohmann::ordered_json messages;
+
+        if (model != current_model) { // switch models will clear context
+            sum_old++;
+            current_model = model;
+        }
+
+        if (current_messages.size() > 2) {
+
+            for (size_t i = 0; i < current_messages.size(); ++i) {
+                std::string value = current_messages[i].value("content", "");
+                if(i < current_messages.size()-2)
+                    sum_new1 = checksum(value.data(), value.size(), sum_new1);
+                sum_new2 = checksum(value.data(), value.size(), sum_new2);
+            }
+
+            if (sum_old == sum_new1) {
+                messages.push_back(current_messages.back());
+            }
+            else {
+                sum_old = 0;
+                messages = current_messages;
+                this->auto_chat_engine->clear_context();
+            }
+            sum_old = sum_new2;
+        }
+        else {
+            sum_old = 0;
+            this->auto_chat_engine->clear_context();
+            messages = current_messages;
+            for (const auto& msg : current_messages) {
+                std::string value = msg.value("content", "");
+                sum_old = checksum(value.data(), value.size(), sum_old);
+            }
+        }
+
         configure_chat_engine_parameters(options, request);
 
         chat_meta_info_t meta_info;
@@ -714,10 +775,13 @@ void RestHandler::handle_openai_chat_completion(const json& request,
                 send_response(error_response);
                 return;
             }
-            auto_chat_engine->generate(meta_info, length_limit, ostream);
+            auto_chat_engine->generate(meta_info, length_limit, ostream, cancellation_token);
             ostream.finalize(meta_info);
 
-            this->auto_chat_engine->clear_context();
+            if (meta_info.stop_reason == CANCEL_DETECTED) {
+                header_print("FLM", "Generation Cancelled!");
+                sum_old++; // make sure checksum doesn't match
+            }
         }
         else {
             uniformed_input.messages = messages;

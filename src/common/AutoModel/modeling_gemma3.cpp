@@ -2,7 +2,7 @@
 /// \brief gemma3 class
 /// \author FastFlowLM Team
 /// \date 2025-09-03
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the gemma3 class
 
 #include "AutoModel/modeling_gemma3.hpp"
@@ -135,14 +135,26 @@ bool Gemma3::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
         }
     }
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+
+    // To avoid redownloading the model, a temporary fix, shall be removed in the next big update on gemma
+    if (tokens[tokens.size() - 1] != 107){
+        tokens.push_back(107);
+    }
+
+    // some models are very sensitive to this bos token, such as lfm2
+    if (this->is_first_prompt == false) {
+        tokens.erase(tokens.begin()); // remove bos token in multi round conversation
+    }
+    this->is_first_prompt = false; // always set to false if the insert is ever called
+    
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
     void* payload = pixel_values.size() > 0 ? static_cast<void*>(&pixel_values) : nullptr;
     return this->_shared_insert(meta_info, tokens, payload);
 }
 
-std::string Gemma3::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
-    return this->_shared_generate(meta_info, length_limit, os);
+std::string Gemma3::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
+    return this->_shared_generate(meta_info, length_limit, os, cancellation_token);
 }
 
 std::string Gemma3::generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os) {

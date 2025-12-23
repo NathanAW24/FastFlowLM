@@ -2,7 +2,7 @@
 /// \brief image_reader class
 /// \author FastFlowLM Team
 /// \date 2025-08-16
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a header file for the image_reader functions
 #pragma once
 

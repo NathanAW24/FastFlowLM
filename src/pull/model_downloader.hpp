@@ -2,7 +2,7 @@
 /// \brief Model downloader class
 /// \author FastFlowLM Team
 /// \date 2025-06-24
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This class is used to download models from the huggingface
 #pragma once
 
@@ -20,7 +20,7 @@ public:
     ModelDownloader(model_list& models);
     
     // Check if model is already downloaded
-    bool is_model_downloaded(const std::string& model_tag);
+    bool is_model_downloaded(const std::string& model_tag, bool quiet_list=0);
     
     // Download model files if not present
     bool pull_model(const std::string& model_tag, bool force_redownload = false);
@@ -32,7 +32,7 @@ public:
     std::vector<std::string> get_present_files(const std::string& model_tag);
     
     // Remove a model and all its files
-    bool remove_model(const std::string& model_tag);
+    bool remove_model(const std::string& model_tag, bool quiet_list=0);
     
     // Get download progress callback
     std::function<void(size_t, size_t)> get_progress_callback();
@@ -50,8 +50,8 @@ private:
     std::string get_model_file_path(const std::string& model_path, const std::string& filename);
     
     // Build download URLs for model files
-    std::vector<std::pair<std::string, std::string>> build_download_list(const std::string& model_tag);
+    std::pair<nlohmann::json, float> build_download_list(const std::string& model_tag);
 
     // bool check_model_compatibility(const std::string& model_tag);
-    bool check_model_compatibility(const std::string& model_tag);
+    bool check_model_compatibility(const std::string& model_tag, bool quiet_list=0);
 }; 

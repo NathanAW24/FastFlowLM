@@ -4,7 +4,7 @@
  * \brief WebServer class and related declarations
  * \author FastFlowLM Team
  * \date 2025-06-24
- *  \version 0.9.21
+ *  \version 0.9.24
  */
 #include "server.hpp"
 #include "rest_handler.hpp"
@@ -273,12 +273,10 @@ void HttpSession::handle_request(bool cors) {
 
 
     // IF not OPTIONS
-
     // Reset response
     res_ = {};
     res_.version(req_.version());
     res_.keep_alive(req_.keep_alive());
-
 
     // Handle the request through the server
     bool deferred = server_.handle_request(req_, res_, socket_, shared_from_this());
@@ -409,13 +407,26 @@ void HttpSession::send_chunk_data(const json& data, bool is_final) {
     //if(is_final)
     //    http_chunk = chunk_content + "\r\n";
     //else
-        http_chunk = chunk_size.str() + "\r\n" + chunk_content + "\r\n";
+    http_chunk = chunk_size.str() + "\r\n" + chunk_content + "\r\n";
 
 
     // Send chunk immediately
     boost::system::error_code ec;
     net::write(socket_, net::buffer(http_chunk), ec);
     
+    if (ec) {
+        if (cancellation_token_) {
+            cancellation_token_->cancel(); 
+        }
+
+        //socket_.shutdown(tcp::socket::shutdown_both, ec);
+        //server_.active_connections_.fetch_sub(1);
+
+        boost::system::error_code ignore_ec;
+        socket_.close(ignore_ec);
+        return;
+    }
+
     if (is_final) {
         // Send final chunk (0-length chunk to end stream)
         std::string final_chunk = "0\r\n\r\n";
@@ -424,20 +435,6 @@ void HttpSession::send_chunk_data(const json& data, bool is_final) {
         socket_.shutdown(tcp::socket::shutdown_both, ec);
         // Decrement connection counter for non-keep-alive connections
         server_.active_connections_.fetch_sub(1);
-        //if (!req_.keep_alive()) {
-        //    header_print("🔒 ", "Closing TCP connection (streaming, non-keep-alive)");
-        //    socket_.shutdown(tcp::socket::shutdown_both, ec);
-        //    // Decrement connection counter for non-keep-alive connections
-        //    server_.active_connections_.fetch_sub(1);
-        //} else {
-        //    header_print("🔗 ", "Keeping TCP connection alive for next request (streaming)");
-        //    // Clear the buffer before reading the next request
-        //    buffer_.consume(buffer_.size());
-        //    // Clear the request object before reading the next request
-        //    req_ = {};
-        //    // For keep-alive connections, read the next request
-        //    read_request();
-        //}
     }
 }
 
@@ -652,6 +649,7 @@ bool WebServer::handle_request(http::request<http::string_body>& req,
         }
 
         auto cancellation_token = std::make_shared<CancellationToken>(session);
+        session->set_cancellation_token(cancellation_token);
 
         std::string request_id;
         if (request_json.contains("request_id")) {
@@ -695,7 +693,7 @@ bool WebServer::handle_request(http::request<http::string_body>& req,
         };
 
         it->second(req, send_response, send_streaming_response, session, cancellation_token);
-        }; // --- End of process_task lambda ---
+    }; // --- End of process_task lambda ---
 
 
     // --- Logic to run or queue the task ---

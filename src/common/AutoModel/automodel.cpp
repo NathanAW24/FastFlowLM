@@ -2,10 +2,11 @@
 /// \brief automodel class
 /// \author FastFlowLM Team
 /// \date 2025-09-01
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the auto_model class
 
 #include "AutoModel/automodel.hpp"
+#include "../../server/server.hpp"
 
 std::unordered_set<std::string> modelTags = {
         "llama3.1", "llama3.1:8b",
@@ -37,6 +38,7 @@ AutoModel::AutoModel(xrt::device* npu_device_inst, std::string current_model) {
     }
     this->last_prefill_time = { 0, "us" };
     this->token_history.reserve(MAX_L);
+    this->is_first_prompt = true;
 }
 
 
@@ -154,7 +156,7 @@ bool AutoModel::_shared_insert(chat_meta_info_t& meta_info, std::vector<int>& to
     return true;
 }
 
-std::string AutoModel::_shared_generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
+std::string AutoModel::_shared_generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
     std::vector<int> sampled_tokens;
     std::string result;
     if (length_limit > 0){
@@ -185,6 +187,11 @@ std::string AutoModel::_shared_generate(chat_meta_info_t& meta_info, int length_
         return result;
     }
     while (this->total_tokens < this->MAX_L){
+        if (cancellation_token && cancellation_token->cancelled()) {
+            reason = CANCEL_DETECTED;
+            cancellation_token->reset();
+            break;
+        }
         this->profiler_list[DECODING_TIME].start();
         buffer<bf16> y = this->lm_engine->forward(last_sampled_token);
         this->profiler_list[DECODING_TIME].stop(1);
@@ -240,6 +247,7 @@ void AutoModel::clear_context() {
         this->profiler_list[i].reset();
     }
     this->last_prefill_time = { 0, "us" };
+    this->is_first_prompt = true;
 }
 
 

@@ -2,7 +2,7 @@
 /// \brief Download model class
 /// \author FastFlowLM Team
 /// \date 2025-06-24
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This class for curl download
 #pragma once
 
@@ -11,6 +11,7 @@
 #include <memory>
 #include <functional>
 #include <curl/curl.h>
+#include "nlohmann/json.hpp"
 
 namespace download_utils {
 
@@ -28,14 +29,14 @@ size_t write_data_to_string(void* ptr, size_t size, size_t nmemb, std::string* u
 int progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
 
 // Download a file from URL to a local file
-bool download_file(const std::string& url, const std::string& local_path, 
+bool download_file(const std::string& url, const std::string& local_path, bool is_lfs, std::string remote_oid,
                    std::function<void(double)> progress_cb = nullptr);
 
 // Download content from URL to a string
 std::string download_string(const std::string& url);
 
 // Download multiple files with progress tracking
-bool download_multiple_files(const std::vector<std::pair<std::string, std::string>>& downloads,
+bool download_multiple_files(const nlohmann::json downloads,
                            std::function<void(size_t, size_t)> progress_cb = nullptr);
 
 // Initialize CURL library (call this once at program startup)

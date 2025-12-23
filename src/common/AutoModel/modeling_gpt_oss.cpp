@@ -2,7 +2,7 @@
 /// \brief modeling_gpt_oss class
 /// \author FastFlowLM Team
 /// \date 2025-10-01
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the gpt-oss class
 #include "AutoModel/modeling_gpt_oss.hpp"   
 
@@ -71,16 +71,17 @@ bool GPT_OSS::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input)
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     return this->_shared_insert(meta_info, tokens);
 
 }
 
 
-std::string GPT_OSS::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
+std::string GPT_OSS::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
     os << "<|start|>" << std::flush;
     os << "assistant" << std::flush;
-    std::string result = this->_shared_generate(meta_info, length_limit, os);
+    std::string result = this->_shared_generate(meta_info, length_limit, os, cancellation_token);
     os << "<|end|>" << std::flush;
     return "<|start|>assistant" + result + "<|end|>";
 }

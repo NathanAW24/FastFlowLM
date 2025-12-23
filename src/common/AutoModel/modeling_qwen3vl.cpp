@@ -2,7 +2,7 @@
 /// \brief deepseek class
 /// \author FastFlowLM Team
 /// \date 2025-09-01
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the deepseek class
 
 
@@ -170,6 +170,7 @@ bool Qwen3VL::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
             tokens.push_back(tokens_init[i]);
         }
     }
+
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
     if (image_payload.num_images > 0){
@@ -180,8 +181,8 @@ bool Qwen3VL::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
 
 }
 
-std::string Qwen3VL::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
-    return this->_shared_generate(meta_info, length_limit, os);
+std::string Qwen3VL::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
+    return this->_shared_generate(meta_info, length_limit, os, cancellation_token);
 }
 
 std::string Qwen3VL::generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os) {
@@ -201,10 +202,10 @@ std::string Qwen3VL_Thinking::generate_with_prompt(chat_meta_info_t& meta_info, 
 }
 
 
-std::string Qwen3VL_Thinking::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
+std::string Qwen3VL_Thinking::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
     std::string result;
     os << "<think>\n\n";
-    result = this->_shared_generate(meta_info, length_limit, os);
+    result = this->_shared_generate(meta_info, length_limit, os, cancellation_token);
     result = "<think>\n\n" + result;
     return result;
 }

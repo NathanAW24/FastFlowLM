@@ -2,7 +2,7 @@
 /// \brief llama3 class
 /// \author FastFlowLM Team
 /// \date 2025-09-04
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the llama3 class
 
 #pragma once
@@ -19,7 +19,7 @@ public:
     void load_model(std::string model_path, json model_inf, int default_context_length = -1, bool enable_preemption = false) override;
     //void toggle_enable_think() override;
     bool insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) override;
-    std::string generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) override;
+    std::string generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token = nullptr) override;
     std::string generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os = std::cout) override;
     std::string apply_chat_template(nlohmann::ordered_json& messages) override;
 };
@@ -37,7 +37,7 @@ public:
     void load_model(std::string model_path, json model_inf, int default_context_length = -1, bool enable_preemption = false) override;
     //void toggle_enable_think() override;
     bool insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) override;
-    std::string generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) override;
+    std::string generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token = nullptr) override;
     std::string generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os = std::cout) override;
     std::string apply_chat_template(nlohmann::ordered_json& messages) override;
 };

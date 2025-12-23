@@ -2,7 +2,7 @@
 /// \brief Download model class
 /// \author FastFlowLM Team
 /// \date 2025-06-24
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This class for curl download
 #include "download_model.hpp"
 #include <fstream>
@@ -10,6 +10,42 @@
 #include <filesystem>
 #include <iomanip>
 #include "utils/utils.hpp"
+#include "nlohmann/json.hpp"
+#include "picosha2.h" 
+#include "sha1.hpp"
+
+/// \brief Calculates the SHA256 hash of a file.
+/// \param file_path The path to the file.
+/// \return A string representing the hex digest of the hash, or an empty string on error.
+std::string calculate_file_sha256(const std::string& file_path) {
+    std::ifstream file(file_path, std::ios::binary);
+    if (!file.is_open()) {
+        return ""; 
+    }
+
+    std::vector<unsigned char> hash(picosha2::k_digest_size);
+    picosha2::hash256(file, hash.begin(), hash.end());
+    return picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+}
+
+std::string calculate_git_blob_oid(const std::string& file_path) {
+    std::ifstream file(file_path, std::ios::binary);
+    if (!file.is_open()) {
+        return "";
+    }
+    file.seekg(0, std::ios::end);
+    size_t size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::ostringstream oss;
+    oss << "blob " << size << '\0';  // Git blob header
+    oss << file.rdbuf();             
+
+    std::string blob_data = oss.str();
+    SHA1 sha1;
+    sha1.update(blob_data);
+    return sha1.final();
+}
 
 namespace download_utils {
 
@@ -89,7 +125,7 @@ int progress_callback(void* clientp, double dltotal, double dlnow, double ultota
 /// \param local_path the local path to save the file
 /// \param progress_cb the progress callback
 /// \return true if the file is downloaded, false otherwise
-bool download_file(const std::string& url, const std::string& local_path, 
+bool download_file(const std::string& url, const std::string& local_path, bool is_lfs, std::string remote_oid, 
                    std::function<void(double)> progress_cb) {
     // Reset progress bar tracking for this download
     g_progress_bar_shown = false;
@@ -147,8 +183,34 @@ bool download_file(const std::string& url, const std::string& local_path,
     if (g_progress_bar_shown) {
         std::cout << std::endl;
     }
+
+    header_print("FLM", "Checking Hash...");
+    std::string local_oid = is_lfs ? calculate_file_sha256(local_path) : calculate_git_blob_oid(local_path);
+    if (local_oid != remote_oid) {
+        header_print("FLM", "Hash not matched!");
+        show_cursor(); // Show cursor on error
+        return false;
+    }
+
     header_print("FLM", "Download completed: " << local_path);
     return true;
+}
+
+static bool download_with_retry(const std::string& url, const std::string& local_path, bool is_lfs, std::string remote_oid,
+    std::function<void(double)> progress_cb, int max_retries = 3) {
+    int attempt = 0;
+    while (attempt < max_retries) {
+        if (download_file(url, local_path, is_lfs, remote_oid, progress_cb)) {
+            return true; 
+        }
+        header_print("FLM", "Download failed (attempt " << (attempt + 1) << "/" << max_retries << ")"); 
+        if(attempt < max_retries - 1)
+            header_print("FLM", "Retrying...");
+        attempt++;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    return false;
 }
 
 /// \brief Download content from URL to a string
@@ -187,16 +249,21 @@ std::string download_string(const std::string& url) {
 /// \param downloads the downloads
 /// \param progress_cb the progress callback
 /// \return true if the files are downloaded, false otherwise
-bool download_multiple_files(const std::vector<std::pair<std::string, std::string>>& downloads,
+bool download_multiple_files(const nlohmann::json downloads,
                            std::function<void(size_t, size_t)> progress_cb) {
     size_t total_files = downloads.size();
     size_t completed_files = 0;
 
     // Hide cursor before starting downloads
-    hide_cursor();
+    //hide_cursor();
 
-    for (const auto& [url, local_path] : downloads) {
+    for (auto& file : downloads) {
+        std::string url = file["url"];
+        std::string local_path = file["localpath"];
         std::string filename = std::filesystem::path(url).filename().string();
+        std::string remote_oid = file["oid"];
+        bool is_lfs = file["is_lfs"];
+
         // cut "?download=true"
         if (filename.find("?download=true") != std::string::npos) {
             filename = filename.substr(0, filename.find("?download=true"));
@@ -210,9 +277,9 @@ bool download_multiple_files(const std::vector<std::pair<std::string, std::strin
             }
         };
 
-        if (!download_file(url, local_path, file_progress)) {
+        if (!download_with_retry(url, local_path, is_lfs, remote_oid, file_progress)) {
             std::cerr << "Failed to download: " << url << std::endl;
-            show_cursor(); // Show cursor on error
+            //show_cursor(); // Show cursor on error
             return false;
         }
 

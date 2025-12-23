@@ -73,6 +73,13 @@ bool LFM2::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+    
+    // some models are very sensitive to this bos token, such as lfm2
+    if (this->is_first_prompt == false) {
+        tokens.erase(tokens.begin()); // remove bos token in multi round conversation
+    }
+    this->is_first_prompt = false; // always set to false if the insert is ever called
+
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
     if (this->total_tokens + tokens.size() >= this->MAX_L){
@@ -102,75 +109,8 @@ bool LFM2::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
 }
 
 
-std::string LFM2::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
-    std::vector<int> sampled_tokens;
-    std::string result;
-    if (length_limit > 0){
-        sampled_tokens.reserve(length_limit);
-    }
-    else{
-        sampled_tokens.reserve(4096);
-    }
-    assert(this->last_token != -1);
-
-    stop_reason_t reason = EOT_DETECTED;
-    int last_sampled_token = this->last_token;
-    this->token_history.push_back(this->last_token);
-    auto decoding_start_time = time_utils::now();
-    if (this->is_normal_token(last_sampled_token) && last_sampled_token != -1){
-        std::string token_str = this->tokenizer->run_time_decoder(last_sampled_token);
-        // token_str = this->_replace_space(token_str);
-        result += token_str;
-        os << token_str << std::flush;
-
-    }
-    if (this->is_eos(last_sampled_token)){
-        return result;
-    }
-    this->profiler_list[TKOEN_DECODE_TIME].stop(1);
-    if (this->total_tokens >= this->MAX_L){
-        header_print("WARNING", "Max length reached, stopping generation...");
-        reason = MAX_LENGTH_REACHED;
-        return result;
-    }
-    while (this->total_tokens < this->MAX_L){
-        this->profiler_list[DECODING_TIME].start();
-        buffer<bf16> y = this->lm_engine->forward(last_sampled_token);
-        this->profiler_list[DECODING_TIME].stop(1);
-
-        this->profiler_list[SAMPLING_TIME].start();
-        int sampled_token = this->sampler->sample(y);
-        this->profiler_list[SAMPLING_TIME].stop(1);
-        this->total_tokens++;
-        last_sampled_token = sampled_token;
-
-        this->profiler_list[TKOEN_DECODE_TIME].start();
-        this->profiler_list[TKOEN_DECODE_TIME].stop(1);
-        if (this->is_normal_token(sampled_token)){ // filter out special tokens
-            std::string token_str = this->tokenizer->run_time_decoder(sampled_token);
-            // token_str = this->_replace_space(token_str);
-            os << token_str << std::flush;
-            result += token_str;
-        }
-        this->token_history.push_back(sampled_token);
-        if (this->is_eos(sampled_token)){
-            this->lm_engine->forward(last_sampled_token);
-            break;
-        }
-        meta_info.generated_tokens++;
-        if ((length_limit > 0) && (meta_info.generated_tokens >= length_limit)){
-            reason = MAX_LENGTH_REACHED;
-            break;
-        }
-    }
-
-    auto decoding_end_time = time_utils::now();
-    meta_info.decoding_duration = (uint64_t)time_utils::duration_ns(decoding_start_time, decoding_end_time).first;
-    meta_info.stop_reason = reason;
-    if (this->total_tokens >= this->MAX_L){
-        header_print("WARNING", "Max length reached, stopping generation...");
-    }
-    return result;
+std::string LFM2::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
+    return this->_shared_generate(meta_info, length_limit, os, cancellation_token);
 }
 
 std::string LFM2::generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os) {

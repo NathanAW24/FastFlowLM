@@ -2,28 +2,13 @@
 /// \brief Model downloader class
 /// \author FastFlowLM Team
 /// \date 2025-06-24
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This class is used to download models from the huggingface
 #include "model_downloader.hpp"
 #include "utils/utils.hpp"
 #include "download_model.hpp"
 #include <sstream>
 #include <iomanip>
-//#include "picosha2.h" 
-//
-///// \brief Calculates the SHA256 hash of a file.
-///// \param file_path The path to the file.
-///// \return A string representing the hex digest of the hash, or an empty string on error.
-//std::string calculate_file_sha256(const std::string& file_path) {
-//    std::ifstream file(file_path, std::ios::binary);
-//    if (!file.is_open()) {
-//        return ""; // 
-//    }
-//
-//    std::vector<unsigned char> hash(picosha2::k_digest_size);
-//    picosha2::hash256(file, hash.begin(), hash.end());
-//    return picosha2::bytes_to_hex_string(hash.begin(), hash.end());
-//}
 
 /// \brief Constructor
 /// \param models the model list
@@ -35,13 +20,14 @@ ModelDownloader::ModelDownloader(model_list& models)
 /// \brief Check if the model is downloaded
 /// \param model_tag the model tag
 /// \return true if the model is downloaded, false otherwise
-bool ModelDownloader::is_model_downloaded(const std::string& model_tag) {
+bool ModelDownloader::is_model_downloaded(const std::string& model_tag, bool quiet_list) {
     auto missing_files = get_missing_files(model_tag);
     bool is_config_file_missing = std::find(missing_files.begin(), missing_files.end(), "config.json") != missing_files.end();
     if (!is_config_file_missing) {
-        if (!check_model_compatibility(model_tag)) {
-            header_print("FLM", "Model is not compatible with the current FLM version. Force re-download.");
-            remove_model(model_tag);
+        if (!check_model_compatibility(model_tag, quiet_list)) {
+            if (!quiet_list)
+                header_print("FLM", "Model is not compatible with the current FLM version. ");
+            remove_model(model_tag, quiet_list);
             return false;
         }
     }
@@ -51,7 +37,7 @@ bool ModelDownloader::is_model_downloaded(const std::string& model_tag) {
 /// \brief Check if the model is compatible with the current FLM version
 /// \param model_tag the model tag
 /// \return true if the model is compatible, false otherwise
-bool ModelDownloader::check_model_compatibility(const std::string& model_tag) {
+bool ModelDownloader::check_model_compatibility(const std::string& model_tag, bool quiet_list) {
     auto model_info = supported_models.get_model_info(model_tag);
     LM_Config config;
     config.from_pretrained(this->supported_models.get_model_path(model_tag));
@@ -74,15 +60,17 @@ bool ModelDownloader::check_model_compatibility(const std::string& model_tag) {
     if (local_version_u32 < required_version_u32) {
         is_compatible = false;
     }
-    if (is_future_version) {
-        header_print("WARNING", "Local model version: " + flm_version + " > " + __FLM_VERSION__);
-        header_print("WARNING", "This model may not be compatible with the current FLM version.");
-        header_print("WARNING", "Please update FLM to the latest version.");
-        exit(0);
-    }
-    if (!is_compatible) {
-        header_print("FLM", "Local model version: " + flm_version + " < " + flm_min_version);
-        return false;
+    if (!quiet_list) {
+        if (is_future_version) {
+            header_print("WARNING", "Local model version: " + flm_version + " > " + __FLM_VERSION__);
+            header_print("WARNING", "This model may not be compatible with the current FLM version.");
+            header_print("WARNING", "Please update FLM to the latest version.");
+            exit(0);
+        }
+        if (!is_compatible) {
+            header_print("FLM", "Local model version: " + flm_version + " < " + flm_min_version);
+            return false;
+        }
     }
     return is_compatible;
 }
@@ -137,24 +125,28 @@ bool ModelDownloader::pull_model(const std::string& model_tag, bool force_redown
         }
         
         // Build download list
-        auto downloads = build_download_list(model_tag);
+        auto download_list = build_download_list(model_tag);
+        auto downloads = download_list.first;
+        float sum_fize_size = download_list.second;
         if (downloads.empty()) {
             header_print("FLM", "No files to download for model: " + model_tag);
             return true; // Return true since all files are already present
         }
         
         header_print("FLM", "Downloading " + std::to_string(downloads.size()) + " missing files...");
-        
-        // Show which files will be downloaded
-        header_print("FLM", "Files to download:");
+
+        header_print("FLM", "Files to download (" << std::fixed << std::setprecision(2) << sum_fize_size << " MB): ");
         for (const auto& download : downloads) {
-            std::string filename = std::filesystem::path(download.second).filename().string();
-            std::cout << "  - " << filename << std::endl;
+            float file_size = download["size"];
+            std::string filename = download["file"];
+            std::cout << "  - " << filename << " ("
+                << std::fixed << std::setprecision(2) << file_size << " MB)"
+                << std::endl;
         }
         
         // Download files with progress
         bool success = download_utils::download_multiple_files(downloads, get_progress_callback());
-        
+
         if (success) {
             header_print("FLM", "Model downloaded successfully!");
             
@@ -297,8 +289,7 @@ std::function<void(size_t, size_t)> ModelDownloader::get_progress_callback() {
     return [](size_t completed, size_t total) {
         if (total > 0) {
             double percentage = (static_cast<double>(completed) / total) * 100.0;
-            std::cout << "\r[FLM]  Overall progress: " << std::fixed << std::setprecision(1) 
-                      << percentage << "% (" << completed << "/" << total << " files)" << std::flush;
+            std::cout << "\r[FLM]  Overall progress:  " << completed << "/" << total << " files" << std::flush;
             
             std::cout << std::endl;
         }
@@ -323,25 +314,41 @@ std::string ModelDownloader::get_model_file_path(const std::string& model_path, 
 /// \brief Build the download list
 /// \param model_tag the model tag
 /// \return the download list
-std::vector<std::pair<std::string, std::string>> ModelDownloader::build_download_list(const std::string& model_tag) {
-    std::vector<std::pair<std::string, std::string>> downloads;
+std::pair<nlohmann::json, float> ModelDownloader::build_download_list(const std::string& model_tag) {
     
+    nlohmann::json downloads = nlohmann::json::array();
+    float sum_file_size = 0;
+
     try {
         auto model_info = supported_models.get_model_info(model_tag);
         std::string base_url = model_info["url"];
         std::string model_name = model_info["name"];
+        std::string file_url = model_info["file_url"];
         std::vector<std::string> model_files = model_info["files"];
         
         // Create model directory
         std::string model_path = supported_models.get_model_path(model_tag);
         std::filesystem::create_directories(model_path);
         
-        // Build download list for regular model files
-        for (int i = 0; i < model_files.size(); ++i) {
-            std::string filename = model_files[i];
+        // GET HF api/models
+        std::string hf_response = download_utils::download_string(file_url);
+        nlohmann::json hf_model_infos = nlohmann::json::parse(hf_response);
+
+        for (const auto& filename : model_files) {
+            auto it = std::find_if(
+                hf_model_infos.begin(),
+                hf_model_infos.end(),
+                [&](const nlohmann::json& f) {
+                    return f["path"] == filename;
+                }
+            );
+            if (it == hf_model_infos.end()) {
+                continue;
+            }
+
+            const auto& file = *it;
             std::string local_path = get_model_file_path(model_path, filename);
-            
-            // Only add to download list if file doesn't exist
+
             if (!file_exists(local_path)) {
                 std::string url;
                 if (std::string(base_url).find("resolve") != std::string::npos) { // resolve provided , may from a specific branch
@@ -350,20 +357,35 @@ std::vector<std::pair<std::string, std::string>> ModelDownloader::build_download
                 else {
                     url = base_url + "/resolve/main/" + filename + "?download=true";
                 }
-                downloads.emplace_back(url, local_path);
+                bool is_lfs = file.contains("lfs");
+                std::string oid = is_lfs ? file["lfs"]["oid"] : file["oid"];
+                float file_size = static_cast<float>(file["size"]) / 1024 / 1024;
+                sum_file_size += file_size;
+
+                nlohmann::json entry = {
+                    {"file", filename},
+                    {"size", file_size},
+                    {"url", url},
+                    {"localpath", local_path},
+                    {"oid", oid},
+                    {"is_lfs", is_lfs},
+                };
+                downloads.push_back(entry);
             }
-        }    
-    } catch (const std::exception& e) {
+
+        }
+    } 
+    catch (const std::exception& e) {
         header_print("ERROR", "Error building download list: " + std::string(e.what()));
     }
-    
-    return downloads;
+
+    return std::make_pair(downloads, sum_file_size);
 }
 
 /// \brief Remove a model and all its files
 /// \param model_tag the model tag
 /// \return true if the model was successfully removed, false otherwise
-bool ModelDownloader::remove_model(const std::string& model_tag) {
+bool ModelDownloader::remove_model(const std::string& model_tag, bool quiet_list) {
     try {
         // Check if model exists in supported models by trying to get its info
         try {
@@ -382,9 +404,11 @@ bool ModelDownloader::remove_model(const std::string& model_tag) {
             header_print("FLM", "Model directory does not exist: " + model_path);
             return true; // Consider it already removed
         }
-        
-        header_print("FLM", "Removing model: " + model_tag);
-        header_print("FLM", "Path: " + model_path);
+
+        if (!quiet_list) {
+            header_print("FLM", "Removing model: " + model_tag);
+            header_print("FLM", "Path: " + model_path);
+        }
         
         // Remove all files in the model directory
         size_t removed_files = 0;
@@ -397,7 +421,8 @@ bool ModelDownloader::remove_model(const std::string& model_tag) {
         
         // Remove the model directory itself
         if (std::filesystem::remove(model_path)) {
-            header_print("FLM", "Successfully removed " + std::to_string(removed_files) + " files and model directory.");
+            if(!quiet_list)
+                header_print("FLM", "Successfully removed " + std::to_string(removed_files) + " files and model directory.");
             return true;
         } else {
             header_print("ERROR", "Failed to remove model directory: " + model_path);

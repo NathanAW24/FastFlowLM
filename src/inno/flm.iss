@@ -4,7 +4,7 @@
 
 AppName=flm
 
-AppVersion=0.9.22
+AppVersion=0.9.24
 
 AppPublisher=FastFlowLM
 
@@ -337,12 +337,12 @@ begin
       end;
     end;
 
-    // --- Delete BRT_MODEL_PATH ---
+    // --- Delete FLM_MODEL_PATH ---
     RegDeleteValue(HKEY_LOCAL_MACHINE,
       'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
       'FLM_MODEL_PATH');
       
-    // --- Delete BRT_SERVE_PORT ---
+    // --- Delete FLM_SERVE_PORT ---
     RegDeleteValue(HKEY_LOCAL_MACHINE,
       'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
       'FLM_SERVE_PORT');

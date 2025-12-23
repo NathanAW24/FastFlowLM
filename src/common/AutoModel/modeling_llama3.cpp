@@ -2,7 +2,7 @@
 /// \brief llama3 class
 /// \author FastFlowLM Team
 /// \date 2025-09-04
-/// \version 0.9.21
+/// \version 0.9.24
 /// \note This is a source file for the llama3 class
 
 #include "AutoModel/modeling_llama3.hpp"
@@ -71,6 +71,13 @@ bool Llama3::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+
+    // some models are very sensitive to this bos token, such as lfm2
+    if (this->is_first_prompt == false) {
+        tokens.erase(tokens.begin()); // remove bos token in multi round conversation
+    }
+    this->is_first_prompt = false; // always set to false if the insert is ever called
+
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
 
@@ -78,8 +85,8 @@ bool Llama3::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& input) {
 }
 
 
-std::string Llama3::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
-    return this->_shared_generate(meta_info, length_limit, os);
+std::string Llama3::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
+    return this->_shared_generate(meta_info, length_limit, os, cancellation_token);
 }
 
 std::string Llama3::generate_with_prompt(chat_meta_info_t& meta_info, lm_uniform_input_t& input, int length_limit, std::ostream& os) {
@@ -153,15 +160,22 @@ bool DeepSeek_r1_8b::insert(chat_meta_info_t& meta_info, lm_uniform_input_t& inp
     }
 
     std::vector<int> tokens = this->tokenizer->encode(templated_text);
+
+    // some models are very sensitive to this bos token, such as lfm2
+    if (this->is_first_prompt == false) {
+        tokens.erase(tokens.begin()); // remove bos token in multi round conversation
+    }
+    this->is_first_prompt = false; // always set to false if the insert is ever called
+
     this->profiler_list[TKOEN_ENCODE_TIME].stop(tokens.size());
     // hardware
 
     return this->_shared_insert(meta_info, tokens);
 }
 
-std::string DeepSeek_r1_8b::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os) {
+std::string DeepSeek_r1_8b::generate(chat_meta_info_t& meta_info, int length_limit, std::ostream& os, std::shared_ptr<CancellationToken> cancellation_token) {
     os << "<think>\n\n";
-    std::string result = this->_shared_generate(meta_info, length_limit, os);
+    std::string result = this->_shared_generate(meta_info, length_limit, os, cancellation_token);
     result = "<think>\n\n" + result;
     return result;
 }

@@ -4,7 +4,7 @@
  * \brief MultiPart/form-data Parser
  * \author FastFlowLM Team
  * \date 2025-10-16
- *  \version 0.9.21
+ *  \version 0.9.24
  */
 
 #include "multipart.hpp"
